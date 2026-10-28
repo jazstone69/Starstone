@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starstone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="crt">
+    <header id="topbar">
+      <span class="brand">BSDF TACNET // <b>STARSTONE</b></span>
+      <nav>
+        <button id="btn-slots" type="button">SAVE / LOAD</button>
+        <button id="btn-new" type="button">NEW GAME</button>
+      </nav>
+    </header>
+
+    <main id="layout">
+      <section id="story" aria-live="polite">
+        <h1 id="scene-title"></h1>
+        <div id="log"></div>
+        <div id="choices"></div>
+      </section>
+
+      <aside id="panel">
+        <h2>SQUAD STATUS</h2>
+        <div id="squad"></div>
+        <h2>INVENTORY</h2>
+        <ul id="inventory"></ul>
+        <div id="starstone"></div>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="slots">
+    <h2>SAVE SLOTS</h2>
+    <div id="slot-list"></div>
+    <div class="slot-tools">
+      <button id="btn-export" type="button">EXPORT SAVE TO FILE</button>
+      <button id="btn-import" type="button">IMPORT SAVE FILE</button>
+      <input id="import-file" type="file" accept=".json,application/json" hidden>
+      <button id="btn-close-slots" type="button">CLOSE</button>
+    </div>
+    <p id="slot-msg"></p>
+  </dialog>
+
+  <script src="js/story.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>
