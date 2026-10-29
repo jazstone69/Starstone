@@ -589,6 +589,21 @@
     if (e.target.files[0]) importSave(e.target.files[0]);
     e.target.value = '';
   });
+  // Text size: steps of the --text-scale used in style.css, remembered per browser.
+  const TEXT_STEPS = [0.85, 1, 1.15, 1.3, 1.5];
+  const TEXT_KEY = 'starstone.textScale';
+  let textStep = TEXT_STEPS.indexOf(Number(localStorage.getItem(TEXT_KEY)));
+  if (textStep < 0) textStep = 1;
+  const applyTextSize = () => {
+    document.documentElement.style.setProperty('--text-scale', TEXT_STEPS[textStep]);
+    localStorage.setItem(TEXT_KEY, TEXT_STEPS[textStep]);
+    $('#btn-text-down').disabled = textStep === 0;
+    $('#btn-text-up').disabled = textStep === TEXT_STEPS.length - 1;
+  };
+  $('#btn-text-down').addEventListener('click', () => { textStep--; applyTextSize(); });
+  $('#btn-text-up').addEventListener('click', () => { textStep++; applyTextSize(); });
+  applyTextSize();
+
   $('#btn-new').addEventListener('click', () => {
     if (confirm('Start a new game? Unsaved progress will be lost.')) newGame();
   });
