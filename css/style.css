@@ -15,7 +15,7 @@
 
 /* Text size: every font size is in rem, so this one value scales the whole game.
    The A- / A+ buttons change --text-scale (saved per browser). */
-html { font-size: calc(19px * var(--text-scale, 1)); }
+html { font-size: calc(22px * var(--text-scale, 1)); }
 
 html, body {
   margin: 0;
