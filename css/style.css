@@ -76,16 +76,14 @@ button:hover, button:focus-visible {
 button:disabled { opacity: 0.4; cursor: default; }
 button:disabled:hover { background: transparent; color: var(--green); }
 
+/* Squad runs across the top; the game screen sits below it. */
 #layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 21rem);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
   max-width: 75rem;
   margin: 0 auto;
-  padding: 20px 16px 48px;
-}
-@media (max-width: 860px) {
-  #layout { grid-template-columns: 1fr; }
+  padding: 16px 16px 48px;
 }
 
 #scene-title {
@@ -149,11 +147,26 @@ button:disabled:hover { background: transparent; color: var(--green); }
 #panel {
   background: var(--panel);
   border: 1px solid var(--green-faint);
-  padding: 12px 14px;
-  align-self: start;
-  position: sticky;
-  top: 12px;
+  padding: 10px 14px;
 }
+#squad {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+@media (max-width: 1000px) { #squad { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { #squad { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#panel-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: flex-start;
+  margin-top: 8px;
+  border-top: 1px solid var(--green-faint);
+  padding-top: 6px;
+}
+#inv-box { flex: 1 1 18rem; min-width: 0; }
+#starstone { flex: 0 1 16rem; }
 #panel h2 {
   font-family: var(--font-display);
   font-size: 1.375rem;
@@ -161,8 +174,8 @@ button:disabled:hover { background: transparent; color: var(--green); }
   margin: 4px 0 8px;
   border-bottom: 1px solid var(--green-faint);
 }
-.member { margin-bottom: 12px; font-size: 0.95rem; line-height: 1.45; }
-.member .name { font-weight: 600; font-size: 1rem; }
+.member { min-width: 0; font-size: 0.8rem; line-height: 1.4; overflow-wrap: anywhere; }
+.member .name { font-weight: 600; font-size: 0.85rem; }
 .member .role { color: var(--green-dim); }
 .member.down { color: var(--red); }
 .member.down .role { color: var(--red); }
@@ -174,11 +187,11 @@ button:disabled:hover { background: transparent; color: var(--green); }
 .hpbar span { display: block; height: 100%; background: var(--green); }
 .member.down .hpbar span { background: var(--red); }
 
-#inventory { list-style: none; margin: 0 0 12px; padding: 0; font-size: 0.95rem; }
-#inventory li { margin-bottom: 4px; }
+#inventory { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 4px 18px; }
 #inventory li.empty { color: var(--green-dim); }
 
-#starstone { color: var(--star); text-shadow: 0 0 6px rgba(159, 216, 255, 0.6); font-size: 0.95rem; }
+#starstone { color: var(--star); text-shadow: 0 0 6px rgba(159, 216, 255, 0.6); font-size: 0.85rem; }
+#starstone:empty { display: none; }
 #starstone button { color: var(--star); border-color: var(--star); margin-top: 6px; width: 100%; }
 #starstone button:hover { background: var(--star); color: var(--bg); }
 
@@ -206,3 +219,42 @@ dialog h2 { font-family: var(--font-display); font-weight: normal; font-size: 1.
 .slot .btns { display: flex; gap: 6px; }
 .slot-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 #slot-msg { min-height: 1.5em; color: var(--amber); font-size: 0.875rem; }
+
+/* ---------- City layer ---------- */
+#cityhud { margin-bottom: 10px; }
+.hud-line {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  font-family: var(--font-display); font-size: 1.25rem; letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.hud-line b { color: var(--green); }
+.hud-alert { color: var(--red); text-shadow: 0 0 4px rgba(255, 85, 85, 0.5); }
+.hud-mission { color: var(--star); }
+.bars {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 6px;
+}
+@media (max-width: 700px) { .bars { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bar { min-width: 0; font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+.bar-top { display: flex; justify-content: space-between; font-size: 1.1rem; }
+.bar-track { height: 8px; background: var(--green-faint); }
+.bar-track span { display: block; height: 100%; background: var(--green); }
+.bar-nerve .bar-track span { background: var(--red); }
+.bar-morale .bar-track span { background: var(--amber); }
+.bar-life .bar-track span { background: var(--star); }
+.bar-timer { font-size: 0.95rem; color: var(--green-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#citynav {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 0 14px; margin-bottom: 14px; border-bottom: 1px dashed var(--green-faint);
+}
+#citynav .nav { font-size: 1.1rem; padding: 2px 10px; }
+#citynav .nav.active { background: var(--green); color: var(--bg); text-shadow: none; }
+
+#choices small { color: var(--green-dim); font-size: 0.85rem; }
+#choices .tag { color: var(--green-dim); font-size: 0.85rem; }
+#choices .event-line { font-size: 0.9rem; color: var(--green-dim); }
+#choices .item-desc { font-size: 0.9rem; color: var(--green-dim); margin-top: -4px; }
+.chip-row, .train-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.train-label { font-family: var(--font-display); font-size: 1.25rem; min-width: 6.5rem; }
+#choices .chip { font-size: 1.1rem; padding: 2px 10px; text-align: center; }
+#choices .chip.active { background: var(--green); color: var(--bg); text-shadow: none; }

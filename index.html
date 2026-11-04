@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Starstone</title>
+  <title>Starstone City</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="css/style.css">
@@ -21,19 +21,25 @@
     </header>
 
     <main id="layout">
-      <section id="story" aria-live="polite">
-        <h1 id="scene-title"></h1>
-        <div id="log"></div>
-        <div id="choices"></div>
-      </section>
-
       <aside id="panel">
         <h2>SQUAD STATUS</h2>
         <div id="squad"></div>
-        <h2>INVENTORY</h2>
-        <ul id="inventory"></ul>
-        <div id="starstone"></div>
+        <div id="panel-extra">
+          <div id="inv-box">
+            <h2>INVENTORY</h2>
+            <ul id="inventory"></ul>
+          </div>
+          <div id="starstone"></div>
+        </div>
       </aside>
+      <section id="story">
+        <div id="cityhud" aria-label="Your status"></div>
+        <nav id="citynav" aria-label="City locations"></nav>
+        <h1 id="scene-title"></h1>
+        <div id="log" aria-live="polite"></div>
+        <div id="choices"></div>
+      </section>
+
     </main>
   </div>
 
@@ -51,5 +57,6 @@
 
   <script src="js/story.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/city.js"></script>
 </body>
 </html>
