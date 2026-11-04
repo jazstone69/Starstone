@@ -446,7 +446,8 @@
         <div class="name">${m.name}</div>
         <div class="role">${m.role}${m.down ? ' // DOWN' : ''}</div>
         <div class="hpbar"><span style="width:${pct}%"></span></div>
-        <div>HP ${m.hp}/${m.stats.maxHp} · STR ${fmtStat(m.stats.str)} · AGI ${fmtStat(m.stats.agi)} · TECH ${fmtStat(m.stats.tech)} · WILL ${fmtStat(m.stats.will)}</div>
+        <div>HP ${m.hp}/${m.stats.maxHp}</div>
+        <div class="stats">STR ${fmtStat(m.stats.str)} · AGI ${fmtStat(m.stats.agi)}<br>TECH ${fmtStat(m.stats.tech)} · WILL ${fmtStat(m.stats.will)}</div>
         ${trust}`;
       squadEl.appendChild(div);
     }
