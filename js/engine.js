@@ -13,7 +13,10 @@
   const logEl = $('#log');
   const choicesEl = $('#choices');
 
-  const SAVE_VERSION = 1;
+  const SAVE_VERSION = 2;
+  // City layer (js/city.js) plugs in here: renderCity, choices, panel, newState, start, slotSummary.
+  const hooks = {};
+  const fmtStat = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
   const SLOT_COUNT = 3;
   const SLOT_KEY = (n) => `starstone.slot.${n}`;
   const STAT_LABELS = { str: 'STR', agi: 'AGI', tech: 'TECH', will: 'WILL' };
@@ -128,6 +131,7 @@
     const scene = S.scenes[id];
     if (!scene) throw new Error(`Unknown scene: ${id}`);
     state.scene = id;
+    state.mode = 'mission';
     titleEl.textContent = resolve(scene.title) || '';
     logEl.innerHTML = '';
     flush();
@@ -148,6 +152,7 @@
     const copy = clone(state);
     copy.checkpoint = null;
     copy.pending = [];
+    delete copy.city;
     return copy;
   }
 
@@ -169,11 +174,14 @@
   }
 
   function showChoices() {
+    if (state.mode === 'city' && hooks.renderCity) return hooks.renderCity();
     choicesEl.innerHTML = '';
     const scene = S.scenes[state.scene];
     if (state.combat) return showCombat();
     if (scene.puzzle) return showPuzzle(scene.puzzle);
-    const list = (scene.choices || []).filter((c) => !c.if || c.if(api));
+    let list = (scene.choices || []).filter((c) => !c.if || c.if(api));
+    const override = hooks.choices && hooks.choices(state.scene, list);
+    if (override) list = override;
     list.forEach((c, i) => addChoice(`${i + 1}. ${choiceLabel(c)}`, () => choose(c)));
   }
 
@@ -188,6 +196,7 @@
 
   function choose(c) {
     if (c.effects) c.effects(api);
+    if (c.run) return c.run();
     if (c.action === 'reshape') return openReshape(c.to);
     if (c.action === 'restart') return newGame();
     if (c.action === 'checkpoint') return loadCheckpoint();
@@ -395,7 +404,7 @@
     choicesEl.innerHTML = '';
     addLine(`RESHAPE ${m.name.toUpperCase()}`, 'heading');
     for (const [stat, label] of Object.entries(STAT_LABELS)) {
-      addChoice(`${label} ${m.stats[stat]} → ${m.stats[stat] + 2}`, () => applyReshape(m, stat, next));
+      addChoice(`${label} ${fmtStat(m.stats[stat])} → ${fmtStat(m.stats[stat] + 2)}`, () => applyReshape(m, stat, next));
     }
     addChoice(`VITALITY ${m.stats.maxHp} → ${m.stats.maxHp + 4} max HP`, () => applyReshape(m, 'maxHp', next));
     addChoice('Back', () => openReshape(next));
@@ -437,7 +446,7 @@
         <div class="name">${m.name}</div>
         <div class="role">${m.role}${m.down ? ' // DOWN' : ''}</div>
         <div class="hpbar"><span style="width:${pct}%"></span></div>
-        <div>HP ${m.hp}/${m.stats.maxHp} · STR ${m.stats.str} · AGI ${m.stats.agi} · TECH ${m.stats.tech} · WILL ${m.stats.will}</div>
+        <div>HP ${m.hp}/${m.stats.maxHp} · STR ${fmtStat(m.stats.str)} · AGI ${fmtStat(m.stats.agi)} · TECH ${fmtStat(m.stats.tech)} · WILL ${fmtStat(m.stats.will)}</div>
         ${trust}`;
       squadEl.appendChild(div);
     }
@@ -465,6 +474,7 @@
       b.addEventListener('click', () => openReshape(null));
       starEl.appendChild(b);
     }
+    if (hooks.panel) hooks.panel();
   }
 
   // ---------- saving ----------
@@ -489,17 +499,24 @@
   }
 
   function validSave(data) {
-    return data && data.version === SAVE_VERSION && data.state && S.scenes[data.state.scene];
+    return data && data.version === SAVE_VERSION && data.state && data.state.city && S.scenes[data.state.scene];
   }
 
   function loadSave(data) {
     state = clone(data.state);
     state.pending = [];
-    enter(state.scene, { fromSave: true });
+    if (state.mode === 'city' && hooks.renderCity) {
+      showChoices();
+      updatePanel();
+    } else {
+      enter(state.scene, { fromSave: true });
+    }
   }
 
   function slotSummary(data) {
     if (!data) return 'EMPTY';
+    if (!validSave(data)) return 'OLD SAVE (NOT COMPATIBLE)';
+    if (hooks.slotSummary) return hooks.slotSummary(data);
     const scene = S.scenes[data.state.scene];
     const when = new Date(data.savedAt).toLocaleString();
     return `${resolve(scene.title) || data.state.scene} · ${when}`;
@@ -568,14 +585,25 @@
     if (!cp) return newGame();
     // The snapshot is taken before the scene's onEnter runs, so entering
     // normally replays it exactly once.
+    // City progress (level, credits, timers) and trained stats are kept;
+    // only the mission rewinds.
+    const city = state.city;
+    const stats = Object.fromEntries(Object.entries(state.squad).map(([id, m]) => [id, clone(m.stats)]));
     state = clone(cp);
     state.pending = [];
+    state.city = city;
+    for (const [id, st] of Object.entries(stats)) {
+      const m = state.squad[id];
+      m.stats = st;
+      m.hp = Math.min(m.hp, st.maxHp);
+    }
     note('[CHECKPOINT RESTORED]', 'warn');
     enter(state.scene);
   }
 
   function newGame() {
-    state = newState();
+    state = hooks.newState ? hooks.newState(newState()) : newState();
+    if (hooks.start) return hooks.start();
     enter(state.scene);
   }
 
@@ -592,11 +620,12 @@
   // Text size: steps of the --text-scale used in style.css, remembered per browser.
   const TEXT_STEPS = [0.85, 1, 1.15, 1.3, 1.5];
   const TEXT_KEY = 'starstone.textScale';
-  let textStep = TEXT_STEPS.indexOf(Number(localStorage.getItem(TEXT_KEY)));
+  let textStep = -1;
+  try { textStep = TEXT_STEPS.indexOf(Number(localStorage.getItem(TEXT_KEY))); } catch { /* storage blocked */ }
   if (textStep < 0) textStep = 1;
   const applyTextSize = () => {
     document.documentElement.style.setProperty('--text-scale', TEXT_STEPS[textStep]);
-    localStorage.setItem(TEXT_KEY, TEXT_STEPS[textStep]);
+    try { localStorage.setItem(TEXT_KEY, TEXT_STEPS[textStep]); } catch { /* storage blocked */ }
     $('#btn-text-down').disabled = textStep === 0;
     $('#btn-text-up').disabled = textStep === TEXT_STEPS.length - 1;
   };
@@ -604,8 +633,18 @@
   $('#btn-text-up').addEventListener('click', () => { textStep++; applyTextSize(); });
   applyTextSize();
 
-  $('#btn-new').addEventListener('click', () => {
-    if (confirm('Start a new game? Unsaved progress will be lost.')) newGame();
+  // Two clicks to start over (browser confirm boxes are blocked in some places).
+  let newArmed = null;
+  $('#btn-new').addEventListener('click', (e) => {
+    const b = e.currentTarget;
+    if (newArmed) {
+      clearTimeout(newArmed);
+      newArmed = null;
+      b.textContent = 'NEW GAME';
+      return newGame();
+    }
+    b.textContent = 'CLICK AGAIN TO WIPE';
+    newArmed = setTimeout(() => { newArmed = null; b.textContent = 'NEW GAME'; }, 4000);
   });
 
   // Number keys pick choices.
@@ -617,6 +656,11 @@
     if (buttons[n - 1]) buttons[n - 1].click();
   });
 
-  window.STARSTONE = { api, get state() { return state; } };
-  newGame();
+  window.STARSTONE = {
+    api, hooks, enter, newGame, newState, loadSave, packSave, validSave, loadCheckpoint,
+    flush, print, note, showChoices, updatePanel, addChoice, addLine, fmtStat, clone, die, mod, clamp, pick,
+    get state() { return state; },
+    set state(v) { state = v; },
+  };
+  // js/city.js starts the game.
 })();
