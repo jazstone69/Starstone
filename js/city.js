@@ -351,6 +351,8 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = `nav${active ? ' active' : ''}`;
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', active ? 'true' : 'false');
       b.textContent = label;
       b.disabled = disabled;
       b.addEventListener('click', onClick);
@@ -405,12 +407,6 @@
         G.addLine(`${new Date(e.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${e.text}`, 'event-line');
       }
     }
-    heading('WHERE TO?');
-    button('1. Story Missions', () => go('missions'));
-    button('2. Gym: train your squad', () => go('gym'));
-    button('3. Sec-Ops: undercity jobs for credits', () => go('ops'));
-    button('4. Patrol: fight for credits and XP', () => go('patrol'));
-    button('5. BSDF Job: report for duty', () => go('job'));
   };
 
   // ----- gym -----
